@@ -1,0 +1,76 @@
+---
+title: "Bball"
+author: "Dave J"
+date: "5/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(tidyr)
+library(gganimate)
+library(gifski)
+library(ggimage)
+setwd("Basketball")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+mutat
+```{r pressure, echo=FALSE}
+Damedata=read.csv("damedata.csv",colClasses = c(rep("character",30)))
+teamim=read.csv("logodf.csv",colClasses = c("character","character"))
+Damedata<-Damedata %>% filter(!MP %in% c("Did Not Dress","Inactive","Did Not Play","Not With Team"))
+Damedata<-Damedata %>% separate(Date,c("Month","Day","Year"))
+Damedata<-Damedata %>% separate(Age,c("YO","DayO"))
+Damedata2<-Damedata %>% mutate_at(c("G","YO","FG","FGA","FG.","X3P","X3PA","X3P.","FT","FTA","FT.","ORB","DRB","TRB","AST","STL","BLK","TOV","PF","PTS","GmSc","PM"),as.numeric)
+noNA<-Damedata2 %>% drop_na()
+Damedata2 <- Damedata2 %>% left_join(teamim,by = c("Opp" = "team"))
+#DAmDamedata<-sapply(Damedata,as.intege
+```
+
+
+```{r}
+Avs=Damedata2 %>% group_by(YO,Opp) %>% summarise(means=mean(PTS),sds=sd(PTS),ns=n(),sems=sd(PTS)/sqrt(n()),CI=sems*1.96)#summarise_all(list(Av=mean),na.rm=TRUE)
+
+Avs<-Avs %>% left_join(teamim,by = c("Opp" = "team")) %>% filter(YO==29) %>% mutate(Sample=seq(1,20,1))
+Avs<-Damedata2 %>% filter(YO==28) %>% mutate(Sample=seq(1,80,1))
+
+
+```
+
+
+
+```{r}
+#ggplot(Damedata2,aes(x=YO,y=PTS))+geom_point(size=.8,alpha=.4)+geom_smooth()+theme_classic()+facet_wrap(~Opp)
+
+a<-ggplot(Avs,aes(x=Sample,y=PTS))+geom_point(alpha=1)+geom_image(aes(image=path),size = 0.05)+geom_jitter()+theme_classic()+transition_time(Sample)+shadow_mark(alpha = 0.3, size = 0.05)
+
+animate(a, nframes = 100, fps=5,end_pause =50,  renderer = gifski_renderer("giannis.gif"))
+
+```
+
+
+```{r}
+allavs=Damedata2 %>% group_by(YO) %>% summarise(Opp="All",means=mean(X3PA),sds=sd(X3PA),ns=n(),sems=sd(X3PA)/sqrt(n()),CI=sems*1.96)
+
+new<-bind_rows(Avs,allavs)
+ggmeans<-allavs$meanall
+ggplot(Avs,aes(x=Opp,y=means,group=YO))+geom_line(aes(color=YO),size=1.5)+geom_hline(yintercept=ggmeans, linetype="dashed", color = "red", size=1)+scale_color_viridis(option = "C")+theme_classic()#geom_errorbar(aes(ymin=means-CI, ymax=means+CI), width=.2,color="black")+
+
+ggplot(allavs,aes(x=YO,y=means))+geom_errorbar(aes(ymin=means-CI, ymax=means+CI), width=.2,color="black")+geom_point(aes(color=means),size=8)+scale_color_viridis(option = "C")
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

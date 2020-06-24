@@ -1,0 +1,230 @@
+---
+title: "Bball"
+author: "Dave J"
+date: "5/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(viridis)
+library(tidyr)
+library(gganimate)
+library(gifski)
+library(ggimage)
+library(reshape2)
+library(extrafont)
+library(grid)
+library(gtable)
+library(png)
+library(cowplot)
+library(magick)
+#setwd("Basketball")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+mutat
+```{r pressure, echo=FALSE}
+data=read.csv("haredneseasons.csv",colClasses = c(rep("character",30)))
+teamim=read.csv("hardendf.csv",colClasses = c("character","character"))
+teamv=read.csv("hardendf2.csv",colClasses = c("character","character"))
+data<-data %>% filter(!MP %in% c("Did Not Dress","Inactive","Did Not Play","Not With Team"))
+data2<-data %>% mutate_at(c("Age","Lg","Pos","G","GS","MP","FG","FGA","FG.","X3P","X3PA","X3P.","X2P","X2PA","X2P.","eFG.","FT","FTA","FT.","ORB","DRB","TRB","AST","STL","BLK","TOV","PF","PTS","X3PArate","Corner.3PA","ShootFouls","And1"),as.numeric)# %>% mutate(Year= case_when(Year == "1998" ~ "1997-98", Year == "1997" ~ "1996-97", Year == "1996" ~ "1995-96"))
+noNA<-data2 %>% drop_na()
+data2 <- data2 %>% left_join(teamim,by = c("Season" = "Season")) %>% left_join(teamv,by = c("Season"="Season"))
+
+```
+
+
+
+```{r}
+data22<-data2 %>% arrange(factor(Season, levels = c("College","2009-10","2010-11","2011-12","2012-13","2013-14","2014-15","2015-16","2016-17","2017-18","2018-19","2019-20"))) %>% mutate(PPM=PTS/MP) %>% mutate(Tm2=paste("Team:",Tm))
+```
+
+
+```{r}
+KukImg <- png::readPNG("logos/Kukjer.png") %>%
+  rasterGrob(interpolate = TRUE)
+
+KerrImg <- png::readPNG("logos/Kerrjer.png") %>%
+  rasterGrob(interpolate = TRUE)
+Kuk<-image_read2("logos/Kukjer.png")
+a<-ggdraw()+ draw_image("logos/Kukjer.png",x=.23,,y=.46,scale=0.05)+draw_image("logos/Kerrjer.png",x=.48,,y=.46,scale=0.05)
+
+```
+
+
+```{r}
+
+
+#ggplot(data2,aes(x=Year,y=PTS))+geom_image(aes(image=path))
+a<-ggplot(data22,aes(x=as.numeric(factor(Season,levels=c("College","2009-10","2010-11","2011-12","2012-13","2013-14","2014-15","2015-16","2016-17","2017-18","2018-19","2019-20"))),y=PPM))+ 
+  geom_image(aes(image=path),size=.15)+
+  geom_label(aes(x=10,y=0.5,label=Tm2,fill=Tm2),alpha=1,family="Calibri",size=8)+
+  scale_fill_manual(values = c('yellow','red','blue'))+
+  scale_x_continuous(breaks = 1:12, labels = unique(data22$Season))+
+  #geom_hline(aes(yintercept=Age))+
+theme(panel.grid.major.y = element_line(size=.01,color="grey82"), panel.grid.major.x = element_blank(),panel.grid.minor.y = element_line(size=.01,color="grey82"),panel.grid.minor.x = element_line(size=.01,color="grey92"),panel.background = element_rect(fill="whitesmoke"),plot.background = element_rect(fill="grey92"), axis.line = element_line(colour = "black",size=.4),axis.ticks=element_line(size=.4),legend.key=element_blank(),axis.text.x=element_text(angle=45,hjust=1,size=8,family="Calibri"),axis.text.y=element_text(size=8,family="Calibri"),axis.title=element_text(family="Calibri"),strip.background =element_rect(fill="whitesmoke"),strip.text=element_text(family="Calibri",face="bold",vjust=-1,color="grey20"),plot.caption = element_text(size=6,face="italic",family="Calibri"),axis.title.x = element_text(family="Calibri",face="bold",size=10),axis.title.y = element_text(family="Calibri",face="bold",size=12),plot.title = element_text(family="Calibri",size=18,face="bold",hjust=0.5,vjust=-.3),legend.position="None",axis.line.x = element_line(colour = "black"),aspect.ratio = 1)+
+#ggtitle("James Harden: The Rise Of Efficiency")+
+  labs(y="Points Per Minute",x="Season",caption="By: Dave Jacobs | Source:basketball-reference.com")+
+  transition_states(factor(Season,levels=c("College","2009-10","2010-11","2011-12","2012-13","2013-14","2014-15","2015-16","2016-17","2017-18","2018-19","2019-20")))+
+  view_follow(fixed_x=TRUE,fixed_y = FALSE)+
+  shadow_mark(alpha = 1,size=.1)
+   #scale_x_discrete(breaks=c("1","2","3","4","5","6","7","8","9","10","11","12"),
+    #    labels=c("College","2009-10","2010-11","2011-12","2012-13","2013-14","2014-15","2015-16","2016-17","2017-18","2018-19","2019-20"))
+
+animate(a, nframes = 100, fps=5,end_pause =50,  renderer = gifski_renderer("giannis.gif"))
+```
+```{r}
+
+
+#ggplot(data2,aes(x=Year,y=PTS))+geom_image(aes(image=path))
+a<-ggplot(data22,aes(x=factor(Season,levels=c("College","2009-10","2010-11","2011-12","2012-13","2013-14","2014-15","2015-16","2016-17","2017-18","2018-19","2019-20")),y=PPM))+ 
+  geom_image(aes(image=path),size=.2)+
+  scale_x_continuous(breaks = 1:12, labels = unique(data22$Season))+
+  #geom_image(aes(image=path2),size=.1,nudge_x=1)+
+theme(panel.grid.major.y = element_line(size=.01,color="grey82"), panel.grid.major.x = element_blank(),panel.grid.minor.y = element_line(size=.01,color="grey82"),panel.grid.minor.x = element_line(size=.01,color="grey92"),panel.background = element_rect(fill="whitesmoke"),plot.background = element_rect(fill="grey92"), axis.line = element_line(colour = "black",size=.4),axis.ticks=element_line(size=.4),legend.key=element_blank(),axis.text.x=element_text(angle=45,hjust=1,size=8,family="Calibri"),axis.text.y=element_text(size=8,family="Calibri"),axis.title=element_text(family="Calibri"),strip.background =element_rect(fill="whitesmoke"),strip.text=element_text(family="Calibri",face="bold",vjust=-1,color="grey20"),plot.caption = element_text(size=6,face="italic",family="Calibri"),axis.title.x = element_text(family="Calibri",face="bold",size=10),axis.title.y = element_text(family="Calibri",face="bold",size=12),plot.title = element_text(family="Calibri",size=18,face="bold",hjust=0.5,vjust=-.3),legend.position="None",axis.line.x = element_line(colour = "black"),aspect.ratio = 1)+
+#ggtitle("James Harden: The Rise Of Efficiency")+
+  labs(tittle='{current_state}',y="Points Per Minute",x="Season",caption="By: Dave Jacobs | Source:basketball-reference.com")+
+  transition_states(Tm)+shadow_mark(alpha = 1,size=.05)+view_follow(fixed_x=TRUE,fixed_y = FALSE)
+
+animate(a, nframes = 100, fps=10,end_pause =50,  renderer = gifski_renderer("giannis.gif"))
+```
+
+   #annotation_custom(KukImg, xmin = 6.5, xmax = 8.5, ymin = 5, ymax = 8.5) +
+  #coord_cartesian(clip = "off")
+
+
+#p3<-ggplot(mapping = aes(x = 0:1, y = 1)) +
+#  theme_void() +
+#  annotation_custom(KukImg, xmin = .5, xmax = 1)+
+#  annotation_custom(KerrImg,xmin=.5, xmax=1)
+
+#gridExtra::grid.arrange(p3,p2,heights = c(.07, .93))
+
+#a<-ggdraw()+ draw_image("logos/Kukjer.png",x=.23,,y=.46,scale=0.05)+draw_image("logos/Kerrjer.png",x=.48,,y=.46,scale=0.05)
+
+#ggsave("compare.png")
+
+```{r}
+p<-ggplot(plotdata,
+       aes(ordering, group = GEO.short,color=GEO.short,fill=GEO.short)) +
+  geom_tile(aes(y = GDPpercap/2, 
+                height = GDPpercap,
+                width = 0.9), alpha = 0.9) +
+  # text on top of bars
+  geom_text(aes(y = GDPpercap, label = GEO.short), hjust = -0.4) +
+  # text in x-axis (requires clip = "off" in coord_cartesian)
+  geom_text(aes(y = 0, label = GEO.short), hjust = 1.4) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_color_viridis_d(name="")+
+  scale_fill_viridis_d(name="")+
+  scale_y_continuous(labels=scales::dollar)+
+  theme_tufte(14,"Avenir")+
+  guides(color=F,fill=F)+
+  labs(title='{frame_time}', x = "",y="GDP per capita ($2012)") +
+  theme(plot.title = element_text(hjust = 1, size = 22),
+        axis.ticks.y = element_blank(),
+        axis.text.y  = element_blank()) + 
+  transition_time(year)+
+  ease_aes('cubic-in-out')
+
+animate(p, nframes = 100, fps = 5, end_pause = 20)
+```
+
+```{r}
+ggplot(data2,aes(x=ShootFouls,y=PTS))+
+  geom_smooth(method='lm',se=FALSE,color="firebrick")+
+  geom_image(aes(image=path),size=.1)+
+theme(panel.grid.major.y = element_line(size=.01,color="grey62"), panel.grid.major.x = element_blank(),panel.grid.minor.y = element_line(size=.01,color="grey62"),panel.grid.minor.x = element_line(size=.01,color="grey92"),panel.background = element_rect(fill="whitesmoke"),plot.background = element_rect(fill="grey92"), axis.line = element_line(colour = "black",size=.4),axis.ticks=element_line(size=.4),legend.key=element_blank(),axis.text.x=element_text(angle=45,hjust=1,size=8,family="Calibri"),axis.text.y=element_text(size=8,family="Calibri"),axis.title=element_text(family="Calibri"),strip.background =element_rect(fill="whitesmoke"),strip.text=element_text(family="Calibri",face="bold",vjust=-1,color="grey20"),plot.caption = element_text(size=6,face="italic",family="Calibri"),axis.title.x = element_text(family="Calibri",face="bold",size=12),axis.title.y = element_text(family="Calibri",face="bold",size=12),plot.title = element_text(family="Calibri",size=18,face="bold",hjust=-.3,vjust=-.3),legend.position="None",axis.line.x = element_line(colour = "black"),aspect.ratio = 1)+
+ggtitle("James Harden: Fouls x Points")+
+labs(y="Points",x="Fouls Drawn",caption="By: Dave Jacobs | Source:basketball-reference.com")
+```
+
+```{r}
+
+#variable<-factor(ptav$variable, levels = c("FG %","Three Point %","Points","Rebounds","Assists","Steals","Blocks","Turnovers","Fouls","Game Score"))
+
+p<-ggplot(ptav,aes(x=Year,y=means,group=Play))+geom_pointrange(aes(ymin=means-sems, ymax=means+sems,color=Play),lwd=0.5)+ scale_color_manual(values=c("black","red1"))+
+  geom_hline(aes(yintercept = as.numeric(TmAvg)),linetype="dashed",size=1,color="grey20")+
+  geom_image(aes(image=path),size=.15)+
+  facet_wrap(~factor(variable,levels = c("FG %","Three Point %","Points","Rebounds","Assists","Steals","Blocks","Turnovers","Fouls","Box +/-") ),scales="free",ncol = 5)+
+theme(panel.grid.major.y = element_line(size=.09,color="grey62"), panel.grid.major.x = element_blank(),panel.grid.minor.y = element_line(size=.09,color="grey62"),panel.grid.minor.x = element_line(size=.08,color="grey"),panel.background = element_rect(fill="whitesmoke"),plot.background = element_rect(fill="whitesmoke"), axis.line = element_line(colour = "black",size=.4),axis.ticks=element_line(size=.4),legend.key=element_blank(),axis.text.x=element_text(angle=45,hjust=1,size=8,family="Calibri"),axis.text.y=element_text(size=6,family="Calibri"),axis.title=element_text(family="Calibri"),strip.background =element_rect(fill="whitesmoke"),strip.text=element_text(family="Calibri",face="bold",vjust=-1,color="grey20"),plot.caption = element_text(size=6,face="italic",family="Calibri"),axis.title.x = element_text(face="bold",family="Calibri",size=12),plot.title = element_text(family="Calibri",size=18,face="bold",hjust=-.3,vjust=-.3),legend.position="None",axis.line.x = element_line(colour = "black"),aspect.ratio = 1)+
+ggtitle("'96-'98 Playoff Performance of Toni Kuko\u010D        & Steve Kerr")+
+labs(y="",x="Season",caption="Data Reflect Average for All Playoff Games, Error bars are SEM where applicable, Dashed Line= Team Average (All Seasons) \nBy: Dave Jacobs | Source:basketball-reference.com")
+
+p +  geom_point(data = . %>% 
+               group_by(variable) %>% #group by facet variable
+               summarise(y.min = pretty(means)[1]-(pretty(means)[1]),
+                         y.max = pretty(means)[length(pretty(means))]+1) %>%
+               tidyr::gather(key, value, -variable),
+             aes(x = 1, y = value),
+             inherit.aes = FALSE, alpha = 0) +
+   scale_y_continuous(breaks = function(x) seq(from = x[1], 
+                                              to = x[2], 
+                                              length.out = 3),labels=function(x) sprintf("%.0f", x), 
+                     expand = c(0, 0))+
+ggsave("compare.png",dpi=600)
+```
+
+
+
+```{r}
+
+
+
+# add team averages
+#check averages
+#fix c symbol
+#add image to title
+
+
+
+
+#+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+#panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.key=element_blank(),axis.text=element_text(size=10))
+#windowsFonts("Arial" = windowsFont("Arial"))"
+Avs=Damedata2 %>% group_by(YO,Opp) %>% summarise(means=mean(PTS),sds=sd(PTS),ns=n(),sems=sd(PTS)/sqrt(n()),CI=sems*1.96)#summarise_all(list(Av=mean),na.rm=TRUE)
+
+Avs<-Avs %>% left_join(teamim,by = c("Opp" = "team")) %>% filter(YO==29) %>% mutate(Sample=seq(1,20,1))
+Avs<-Damedata2 %>% filter(YO==28) %>% mutate(Sample=seq(1,80,1))
+
+
+```
+
+
+
+```{r}
+#ggplot(Damedata2,aes(x=YO,y=PTS))+geom_point(size=.8,alpha=.4)+geom_smooth()+theme_classic()+facet_wrap(~Opp)
+
+a<-ggplot(Avs,aes(x=Sample,y=PTS))+geom_point(alpha=1)+geom_image(aes(image=path),size = 0.05)+geom_jitter()+theme_classic()+transition_time(Sample)+shadow_mark(alpha = 0.3, size = 0.05)
+
+animate(a, nframes = 100, fps=5,end_pause =50,  renderer = gifski_renderer("giannis.gif"))
+
+```
+
+
+```{r}
+allavs=Damedata2 %>% group_by(YO) %>% summarise(Opp="All",means=mean(X3PA),sds=sd(X3PA),ns=n(),sems=sd(X3PA)/sqrt(n()),CI=sems*1.96)
+
+new<-bind_rows(Avs,allavs)
+ggmeans<-allavs$meanall
+ggplot(Avs,aes(x=Opp,y=means,group=YO))+geom_line(aes(color=YO),size=1.5)+geom_hline(yintercept=ggmeans, linetype="dashed", color = "red", size=1)+scale_color_viridis(option = "C")+theme_classic()#geom_errorbar(aes(ymin=means-CI, ymax=means+CI), width=.2,color="black")+
+
+ggplot(allavs,aes(x=YO,y=means))+geom_errorbar(aes(ymin=means-CI, ymax=means+CI), width=.2,color="black")+geom_point(aes(color=means),size=8)+scale_color_viridis(option = "C")
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
